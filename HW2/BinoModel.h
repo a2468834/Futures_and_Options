@@ -6,8 +6,8 @@
  *  Writer_ID: 0416047
  *  Writer_Name: Chuan-Chun, Wang
  */
-#ifndef _BINO_MODEL_H_
-#define _BINO_MODEL_H_
+#ifndef _BINOMODEL_H_
+#define _BINOMODEL_H_
 
 #include <cstdio>
 #include <cstdlib>
@@ -22,12 +22,12 @@
 
 using namespace std;
 
-class Bino_Model
+class BinoModel
 {
 /* Constructors */
 public:	
-	Bino_Model();// default constructor
-	Bino_Model(
+	BinoModel();// default constructor
+	BinoModel(
 		int OptionType,
 		int TimeStep,
 		float Stock0,
@@ -47,19 +47,13 @@ public:
 public:
 
 private:
-	int option_type;
-	// '0' means European options, '1' means American options
-	int time_step;
-	// How many time steps in one year.
-	float stock_0;
-	// stock price at time 0(in USD$)
+	int option_type;// '0' means European options, '1' means American options
+	int time_step;// How many time steps in one year.
+	float stock_0;// stock price at time 0(in USD$)
 	float volatility;
-	float exercise;
-	// strike price of the options(in USD$)
-	float maturity;
-	// maturity time of the options(in years)
-	float interest_rate;
-	// risk-free interest rate (in decimal point)
+	float exercise;// strike price of the options(in USD$)
+	float maturity;// maturity time of the options(in years)
+	float interest_rate;// risk-free interest rate (in decimal point)
 };
 
 #endif

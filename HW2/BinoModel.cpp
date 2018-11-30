@@ -6,11 +6,11 @@
  *  Writer_ID: 0416047
  *  Writer_Name: Chuan-Chun, Wang
  */
-#include "Bino_Model.h"
+#include "BinoModel.h"
 
 using namespace std;
 
-Bino_Model::Bino_Model()
+BinoModel::BinoModel()
 {
 	option_type=0;
 	time_step=12;
@@ -21,7 +21,7 @@ Bino_Model::Bino_Model()
 	interest_rate=5;
 }
 
-Bino_Model::Bino_Model(
+BinoModel::BinoModel(
 	int OptionType, int TimeStep, float Stock0, float Volatility, float Exercise, 
 	float Maturity, float InterestRate)
 {
@@ -34,7 +34,7 @@ Bino_Model::Bino_Model(
 	interest_rate=InterestRate;
 }
 
-void Bino_Model::print_func() const
+void BinoModel::print_func() const
 {
 	cout<<"option_type:"<<option_type<<endl;
 	cout<<"time_step:"<<time_step<<endl;
