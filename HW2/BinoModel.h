@@ -58,6 +58,8 @@ private:
 	float interest_rate;// risk-free interest rate (in decimal point)
 	float up_move_ratio;// stock_0 times u equals to stock price when up movement occurs.
 	float down_nove_ratio;
+	float up_move_prob;// probability of up movement happens
+	float growth_factor;
 };
 
 #endif

@@ -19,9 +19,12 @@ BinoModel::BinoModel()
 	exercise        = 52;
 	maturity        = 2;
 	interest_rate   = 0.005;
+
 	step_num        = ceil((float) time_step*maturity);
 	up_move_ratio   = exp(volatility*sqrt((float) 1/time_step));
 	down_nove_ratio = exp(-volatility*sqrt((float) 1/time_step));
+	growth_factor   = exp(interest_rate*((float) 1/time_step));
+	up_move_prob    = ( growth_factor - down_move_ratio ) / ( up_move_ratio - down_move_ratio );
 }
 
 BinoModel::BinoModel(
@@ -120,9 +123,12 @@ BinoModel::BinoModel(
 	exercise        = Exercise;
 	maturity        = Maturity;
 	interest_rate   = InterestRate;
+
 	step_num        = ceil((float) time_step*maturity);
 	up_move_ratio   = exp( volatility * sqrt( (float) 1/time_step ) );
 	down_nove_ratio = exp( -volatility*sqrt( (float) 1/time_step ) );
+	growth_factor   = exp(interest_rate*((float) 1/time_step));
+	up_move_prob    = ( growth_factor - down_move_ratio ) / ( up_move_ratio - down_move_ratio );
 }
 
 void BinoModel::print_func() const
