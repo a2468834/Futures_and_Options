@@ -49,12 +49,15 @@ public:
 
 private:
 	int option_type;// '0' means European options, '1' means American options
-	int time_step;// How many time steps in one year.
+	int time_step;// how many time steps in one year.
+	int step_num;// total munber of time steps during life of options.
 	float stock_0;// stock price at time 0(in USD$)
-	float volatility;
+	float volatility;// volatility equals to 'sigma' not to 'sigma*sigma'.
 	float exercise;// strike price of the options(in USD$)
 	float maturity;// maturity time of the options(in years)
 	float interest_rate;// risk-free interest rate (in decimal point)
+	float up_move_ratio;// stock_0 times u equals to stock price when up movement occurs.
+	float down_nove_ratio;
 };
 
 #endif

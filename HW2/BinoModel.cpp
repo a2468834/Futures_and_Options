@@ -12,13 +12,16 @@ using namespace std;
 
 BinoModel::BinoModel()
 {
-	option_type=0;
-	time_step=12;
-	stock_0=50;
-	volatility=0.3;
-	exercise=52;
-	maturity=2;
-	interest_rate=0.005;
+	option_type     = 0;
+	time_step       = 12;
+	stock_0         = 50;
+	volatility      = 0.4;
+	exercise        = 52;
+	maturity        = 2;
+	interest_rate   = 0.005;
+	step_num        = ceil((float) time_step*maturity);
+	up_move_ratio   = exp(volatility*sqrt((float) 1/time_step));
+	down_nove_ratio = exp(-volatility*sqrt((float) 1/time_step));
 }
 
 BinoModel::BinoModel(
@@ -26,100 +29,100 @@ BinoModel::BinoModel(
 	float Maturity, float InterestRate)
 {
 	// 'OptionType' type checking
-	if( typeid(OptionType).name() != "int" ) 
+	if( !(typeid(OptionType) == typeid(int)) ) 
 	{
 		cout<<"Wrong type: option type"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else if( (OptionType==0 || OptionType==1) != true )
+	if( (OptionType==0 || OptionType==1) != true )
 	{
 		cout<<"Wrong number: option type"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else option_type=OptionType;
-
 
 	// 'TimeStep' type checking
-	if( typeid(TimeStep).name() != "i")
+	if( !(typeid(TimeStep) == typeid(int)) )
 	{
 		cout<<"Wrong type: time step"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else if( TimeStep <= 0 )
+	if( TimeStep <= 0 )
 	{
 		cout<<"Wrong number: time step"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else time_step=TimeStep;
-
 
 	// 'Stock0' type checking
-	if( typeid(Stock0).name() != "f" )
+	if( !(typeid(Stock0) == typeid(float)) )
 	{
 		cout<<"Wrong type: stock price at time 0"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else if( Stock0 <= 0 )
+	if( Stock0 <= 0 )
 	{
 		cout<<"Wrong number: stock price at time 0"<<endl;
 		exit(EXIT_FAILURE);	
 	}
-	else stock_0=Stock0;
 
 
 	// 'Volatility' type checking
-	if( typeid(Volatility).name() != "f" )
+	if( !(typeid(Volatility) == typeid(float)) )
 	{
 		cout<<"Wrong type: volatility"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else if( Volatility < 0 )
+	if( Volatility < 0 )
 	{
 		cout<<"Wrong number: volatility"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else volatility=Volatility;
-
 
 	// 'Exercise' type checking
-	if( typeid(Exercise).name() != "f" )
+	if( !(typeid(Exercise) == typeid(float)) )
 	{
 		cout<<"Wrong type: exercise price of options"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else if( Exercise <= 0 )
+	if( Exercise <= 0 )
 	{
 		cout<<"Wrong number: exercise price of options"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else exercise=Exercise;
-
 
 	// 'Maturity' type checking
-	if( typeid(Maturity).name() != "f" )
+	if( !(typeid(Maturity) == typeid(float)) )
 	{
 		cout<<"Wrong type: maturity of options"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else if(Maturity<=0)
+	if(Maturity<=0)
 	{
 		cout<<"Wrong number: maturity of options"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else maturity=Maturity;
 
 	// 'InterestRate' type checking
-	if( typeid(InterestRate).name() != "f" )
+	if( !(typeid(InterestRate) == typeid(float)) )
 	{
 		cout<<"Wrong type: risk-free interest rate"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else if(InterestRate<=0)
+	if(InterestRate<=0)
 	{
 		cout<<"Wrong number: risk-free interest rate"<<endl;
 		exit(EXIT_FAILURE);
 	}
-	else interest_rate=InterestRate;
+
+	option_type     = OptionType;
+	time_step       = TimeStep;
+	stock_0         = Stock0;
+	volatility      = Volatility;
+	exercise        = Exercise;
+	maturity        = Maturity;
+	interest_rate   = InterestRate;
+	step_num        = ceil((float) time_step*maturity);
+	up_move_ratio   = exp( volatility * sqrt( (float) 1/time_step ) );
+	down_nove_ratio = exp( -volatility*sqrt( (float) 1/time_step ) );
 }
 
 void BinoModel::print_func() const
