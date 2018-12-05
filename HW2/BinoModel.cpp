@@ -16,20 +16,22 @@ BinoModel::BinoModel()
 	time_step       = 12;
 	stock_0         = 50;
 	volatility      = 0.4;
-	exercise        = 52;
-	maturity        = 2;
-	interest_rate   = 0.005;
+	exercise        = 50;
+	maturity        = 0.4167;
+	interest_rate   = 0.1;
 
-	step_num        = ceil((float) time_step*maturity);
-	up_move_ratio   = exp(volatility*sqrt((float) 1/time_step));
-	down_nove_ratio = exp(-volatility*sqrt((float) 1/time_step));
-	growth_factor   = exp(interest_rate*((float) 1/time_step));
+	step_num        = ceil((double) time_step*maturity);
+	up_move_ratio   = exp(volatility*sqrt((double) 1/time_step));
+	down_move_ratio = exp(-volatility*sqrt((double) 1/time_step));
+	growth_factor   = exp(interest_rate*((double) 1/time_step));
 	up_move_prob    = ( growth_factor - down_move_ratio ) / ( up_move_ratio - down_move_ratio );
+
+	pricing();
 }
 
 BinoModel::BinoModel(
-	int OptionType, int TimeStep, float Stock0, float Volatility, float Exercise, 
-	float Maturity, float InterestRate)
+	int OptionType, int TimeStep, double Stock0, double Volatility, double Exercise, 
+	double Maturity, double InterestRate)
 {
 	// 'OptionType' type checking
 	if( !(typeid(OptionType) == typeid(int)) ) 
@@ -56,7 +58,7 @@ BinoModel::BinoModel(
 	}
 
 	// 'Stock0' type checking
-	if( !(typeid(Stock0) == typeid(float)) )
+	if( !(typeid(Stock0) == typeid(double)) )
 	{
 		cout<<"Wrong type: stock price at time 0"<<endl;
 		exit(EXIT_FAILURE);
@@ -69,7 +71,7 @@ BinoModel::BinoModel(
 
 
 	// 'Volatility' type checking
-	if( !(typeid(Volatility) == typeid(float)) )
+	if( !(typeid(Volatility) == typeid(double)) )
 	{
 		cout<<"Wrong type: volatility"<<endl;
 		exit(EXIT_FAILURE);
@@ -81,7 +83,7 @@ BinoModel::BinoModel(
 	}
 
 	// 'Exercise' type checking
-	if( !(typeid(Exercise) == typeid(float)) )
+	if( !(typeid(Exercise) == typeid(double)) )
 	{
 		cout<<"Wrong type: exercise price of options"<<endl;
 		exit(EXIT_FAILURE);
@@ -93,7 +95,7 @@ BinoModel::BinoModel(
 	}
 
 	// 'Maturity' type checking
-	if( !(typeid(Maturity) == typeid(float)) )
+	if( !(typeid(Maturity) == typeid(double)) )
 	{
 		cout<<"Wrong type: maturity of options"<<endl;
 		exit(EXIT_FAILURE);
@@ -105,7 +107,7 @@ BinoModel::BinoModel(
 	}
 
 	// 'InterestRate' type checking
-	if( !(typeid(InterestRate) == typeid(float)) )
+	if( !(typeid(InterestRate) == typeid(double)) )
 	{
 		cout<<"Wrong type: risk-free interest rate"<<endl;
 		exit(EXIT_FAILURE);
@@ -124,10 +126,10 @@ BinoModel::BinoModel(
 	maturity        = Maturity;
 	interest_rate   = InterestRate;
 
-	step_num        = ceil((float) time_step*maturity);
-	up_move_ratio   = exp( volatility * sqrt( (float) 1/time_step ) );
-	down_nove_ratio = exp( -volatility*sqrt( (float) 1/time_step ) );
-	growth_factor   = exp(interest_rate*((float) 1/time_step));
+	step_num        = ceil((double) time_step*maturity);
+	up_move_ratio   = exp( volatility * sqrt( (double) 1/time_step ) );
+	down_move_ratio = exp( -volatility*sqrt( (double) 1/time_step ) );
+	growth_factor   = exp(interest_rate*((double) 1/time_step));
 	up_move_prob    = ( growth_factor - down_move_ratio ) / ( up_move_ratio - down_move_ratio );
 }
 
@@ -142,8 +144,24 @@ void BinoModel::print_func() const
 	cout<<"interest_rate:"<<interest_rate<<endl;
 }
 
-float BinoModel::pricing()
+double BinoModel::pricing()
 {
-	float present_time_step[time_step];
-	float next_time_step[time_step];
+	double parent[step_num];
+	double child[step_num];
+
+	// Generate option price at time step N
+	for(int i=0; i<step_num; i++)
+	{
+		double exercise_value = exercise-stock_0*pow(up_move_ratio, i)*pow(down_move_ratio, step_num-i);
+		child[i] = max(exercise_value, (double) 0);
+		cout<<"u^i: "<<pow(up_move_ratio, i)<<"; ";
+		cout<<"d^(N-i): "<<pow(down_move_ratio, step_num-i)<<"; ";
+		cout<<child[i]<<endl;
+	}
+
+	for(int i=0; i<step_num; i++)
+	{
+		cout<<child[i]<<endl;
+	}
+	return 0.0;
 }

@@ -16,11 +16,11 @@ int main()
 	BinoModel B2(0, 52, 10, 0.1, 20, 2, 0.001);
 
 	cout<<"default constr"<<endl;
-	B1.print_func();
+	//B1.print_func();
 	cout<<endl;
 
-	cout<<"initial constr"<<endl;
-	B2.print_func();
-	cout<<endl;
+	//cout<<"initial constr"<<endl;
+	//B2.print_func();
+	//cout<<endl;
 	return 0;
 }
