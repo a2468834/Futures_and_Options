@@ -12,7 +12,10 @@ using namespace std;
 
 BinoModel::BinoModel()
 {
-	option_type     = 0;
+	// Some temporal variables
+	double growth_factor;
+
+	option_type     = 1;
 	time_step       = 12;
 	stock_0         = 50;
 	volatility      = 0.4;
@@ -20,19 +23,43 @@ BinoModel::BinoModel()
 	maturity        = 0.4167;
 	interest_rate   = 0.1;
 
-	step_num        = ceil((double) time_step*maturity);
+	step_num        = floor((double) time_step*maturity);
 	up_move_ratio   = exp(volatility*sqrt((double) 1/time_step));
 	down_move_ratio = exp(-volatility*sqrt((double) 1/time_step));
 	growth_factor   = exp(interest_rate*((double) 1/time_step));
 	up_move_prob    = ( growth_factor - down_move_ratio ) / ( up_move_ratio - down_move_ratio );
 
-	pricing();
+	pricing_func();
+
+	cout.precision(4);
+
+	cout<<"Result:"<<endl;
+	cout<<"(1) Basic Parameters"<<endl;
+	if(option_type==0)cout<<"European Style"<<endl;
+	else cout<<"American Style"<<endl;
+	cout<<"u: "<<fixed<<up_move_ratio<<endl;
+	cout<<"d: "<<fixed<<down_move_ratio<<endl;
+	cout<<"p: "<<fixed<<up_move_prob<<endl;
+	cout<<"time step \\Delta t = "<<fixed<<maturity/(double)step_num<<" years"<<endl;
+	cout<<endl;
+
+	cout<<"(2) Option Price"<<endl;
+	cout<<setprecision(4)<<option_pricing_value<<endl;
 }
 
 BinoModel::BinoModel(
-	int OptionType, int TimeStep, double Stock0, double Volatility, double Exercise, 
-	double Maturity, double InterestRate)
+	int OptionType, 
+	int TimeStep, 
+	double Stock0, 
+	double Volatility, 
+	double Exercise, 
+	double Maturity, 
+	double InterestRate)
 {
+	// Some temporal variables
+	double growth_factor;
+	
+	/* Input data semantic checking start */
 	// 'OptionType' type checking
 	if( !(typeid(OptionType) == typeid(int)) ) 
 	{
@@ -117,6 +144,7 @@ BinoModel::BinoModel(
 		cout<<"Wrong number: risk-free interest rate"<<endl;
 		exit(EXIT_FAILURE);
 	}
+	/* Input data semantic checking end */
 
 	option_type     = OptionType;
 	time_step       = TimeStep;
@@ -131,6 +159,8 @@ BinoModel::BinoModel(
 	down_move_ratio = exp( -volatility*sqrt( (double) 1/time_step ) );
 	growth_factor   = exp(interest_rate*((double) 1/time_step));
 	up_move_prob    = ( growth_factor - down_move_ratio ) / ( up_move_ratio - down_move_ratio );
+
+	pricing_func();
 }
 
 void BinoModel::print_func() const
@@ -144,24 +174,48 @@ void BinoModel::print_func() const
 	cout<<"interest_rate:"<<interest_rate<<endl;
 }
 
-double BinoModel::pricing()
+void BinoModel::pricing_func()
 {
-	double parent[step_num];
-	double child[step_num];
+	double parent[step_num+1];
+	double child[step_num+1];
+	double underly_asset[step_num+1][step_num+1];
+
+	// Initialize arrays
+	memset(parent, 0, sizeof(parent[0]) * (step_num+1) );
+	memset(child, 0, sizeof(child[0]) * (step_num+1) );
+	memset(underly_asset, 0, sizeof(underly_asset[0][0]) * (step_num+1) * (step_num+1) );
+
+	// Calculate underlying asset prices through all time step
+	for(int i=0; i<(step_num+1); i++)
+		for(int j=0; j<(step_num+1); j++)
+			underly_asset[i][j] = stock_0*pow(up_move_ratio, j)*pow(down_move_ratio, i-j);
 
 	// Generate option price at time step N
-	for(int i=0; i<step_num; i++)
+	for(int i=0; i<(step_num+1); i++)
 	{
-		double exercise_value = exercise-stock_0*pow(up_move_ratio, i)*pow(down_move_ratio, step_num-i);
+		double exercise_value = exercise - underly_asset[step_num][i];
 		child[i] = max(exercise_value, (double) 0);
-		cout<<"u^i: "<<pow(up_move_ratio, i)<<"; ";
-		cout<<"d^(N-i): "<<pow(down_move_ratio, step_num-i)<<"; ";
-		cout<<child[i]<<endl;
 	}
 
-	for(int i=0; i<step_num; i++)
+	// Backward induction procedure
+	for(int i=1; i<(step_num+1); i++)
 	{
-		cout<<child[i]<<endl;
+		for(int j=0; j<step_num-i+1; j++)
+		{
+			double risk_neutral_future;
+			double early_exercise;
+			double later_exercise;
+
+			risk_neutral_future = child[j] * (1-up_move_prob) + child[j+1] * up_move_prob;
+			early_exercise      = ( option_type == 0 ) ? 0 : ( exercise - underly_asset[step_num-i][j] );
+			later_exercise      = risk_neutral_future * exp( -interest_rate * maturity / (double) step_num );
+
+			parent[j] = max(early_exercise, later_exercise);
+		}
+		
+		// Prepare for next induction
+		for(int j=0; j<step_num; j++)child[j] = (j < step_num-i+1) ? parent[j] : 0;
 	}
-	return 0.0;
+
+	option_pricing_value = parent[0];
 }
