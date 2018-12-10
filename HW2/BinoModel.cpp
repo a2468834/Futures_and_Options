@@ -12,40 +12,58 @@ using namespace std;
 
 BinoModel::BinoModel()
 {
-	// Some temporal variables
-	double growth_factor;
+	option_style         = 1;
+	option_type          = 1;
+	time_step            = 12.0;
+	stock_0              = 50;
+	volatility           = 0.4;
+	exercise             = 50;
+	maturity             = 0.4167;
+	interest_rate        = 0.1;
+	print_mode           = 0;
+	pricing_model        = 0;
+	option_pricing_value = 0;
 
-	option_type     = 1;
-	time_step       = 12;
-	stock_0         = 50;
-	volatility      = 0.4;
-	exercise        = 50;
-	maturity        = 0.4167;
-	interest_rate   = 0.1;
 
-	step_num        = floor((double) time_step*maturity);
-	up_move_ratio   = exp(volatility*sqrt((double) 1/time_step));
-	down_move_ratio = exp(-volatility*sqrt((double) 1/time_step));
-	growth_factor   = exp(interest_rate*((double) 1/time_step));
+	double growth_factor;// Temporal variables
+
+	step_num        = ceil( time_step * maturity );
+	up_move_ratio   = exp( volatility * sqrt( 1.0 / time_step ) );
+	down_move_ratio = exp( (-volatility) * sqrt( 1.0 / time_step) );
+	growth_factor   = exp( interest_rate * ( 1.0 / time_step ) );
 	up_move_prob    = ( growth_factor - down_move_ratio ) / ( up_move_ratio - down_move_ratio );
+	
+	if(pricing_model == 0)BM_pricing_func();
+	else BS_pricing_func(option_type, stock_0, volatility, exercise, maturity, interest_rate);
 
-	pricing_func();
-	print_func();
+	print_func(print_mode);
 }
 
 BinoModel::BinoModel(
-	int OptionType, 
-	int TimeStep, 
+	int    OptionStyle, 
+	int    OptionType, 
+	double TimeStep, 
 	double Stock0, 
 	double Volatility, 
 	double Exercise, 
 	double Maturity, 
-	double InterestRate)
-{
-	// Some temporal variables
-	double growth_factor;
-	
+	double InterestRate, 
+	int    PrintMode, 
+	int    PricingModel)
+{	
 	/* Input data semantic checking start */
+	// 'OptionStyle' type checking
+	if( !(typeid(OptionStyle) == typeid(int)) ) 
+	{
+		cout<<"Wrong type: option style"<<endl;
+		exit(EXIT_FAILURE);
+	}
+	if( (OptionStyle==0 || OptionStyle==1) != true )
+	{
+		cout<<"Wrong number: option style"<<endl;
+		exit(EXIT_FAILURE);
+	}
+
 	// 'OptionType' type checking
 	if( !(typeid(OptionType) == typeid(int)) ) 
 	{
@@ -59,7 +77,7 @@ BinoModel::BinoModel(
 	}
 
 	// 'TimeStep' type checking
-	if( !(typeid(TimeStep) == typeid(int)) )
+	if( !(typeid(TimeStep) == typeid(double)) )
 	{
 		cout<<"Wrong type: time step"<<endl;
 		exit(EXIT_FAILURE);
@@ -81,7 +99,6 @@ BinoModel::BinoModel(
 		cout<<"Wrong number: stock price at time 0"<<endl;
 		exit(EXIT_FAILURE);	
 	}
-
 
 	// 'Volatility' type checking
 	if( !(typeid(Volatility) == typeid(double)) )
@@ -130,8 +147,40 @@ BinoModel::BinoModel(
 		cout<<"Wrong number: risk-free interest rate"<<endl;
 		exit(EXIT_FAILURE);
 	}
+
+	// 'PrintMode' type checking
+	if( !(typeid(PrintMode) == typeid(int)) )
+	{
+		cout<<"Wrong type: mode of printing out"<<endl;
+		exit(EXIT_FAILURE);
+	}
+	if( (PrintMode==0 || PrintMode==1) != true )
+	{
+		cout<<"Wrong number: You can only choose printing mode 0 or mode 1."<<endl;
+		exit(EXIT_FAILURE);
+	}
+
+	// 'PricingModel' type checking
+	if( !(typeid(PricingModel) == typeid(int)) )
+	{
+		cout<<"Wrong type: choosing princing model"<<endl;
+		exit(EXIT_FAILURE);
+	}
+	if( (PricingModel==0 || PricingModel==1) != true )
+	{
+		cout<<"Wrong number: You can only choose binomial tree model(0) or Black-Scholes model(1)."<<endl;
+		exit(EXIT_FAILURE);
+	}
+	if( OptionStyle==1 && PricingModel==1 )
+	{
+		cout<<"Wrong number: Black-Scholes model does not support American option pricing."<<endl;
+		exit(EXIT_FAILURE);
+	}
 	/* Input data semantic checking end */
 
+	double growth_factor;// Temporal variables
+
+	option_style    = OptionStyle;
 	option_type     = OptionType;
 	time_step       = TimeStep;
 	stock_0         = Stock0;
@@ -139,35 +188,22 @@ BinoModel::BinoModel(
 	exercise        = Exercise;
 	maturity        = Maturity;
 	interest_rate   = InterestRate;
+	print_mode      = PrintMode;
+	pricing_model   = PricingModel;
 
-	step_num        = ceil((double) time_step*maturity);
-	up_move_ratio   = exp( volatility * sqrt( (double) 1/time_step ) );
-	down_move_ratio = exp( -volatility*sqrt( (double) 1/time_step ) );
-	growth_factor   = exp(interest_rate*((double) 1/time_step));
+	step_num        = ceil( time_step * maturity );
+	up_move_ratio   = exp( volatility * sqrt( 1.0 / time_step ) );
+	down_move_ratio = exp( (-volatility) * sqrt( 1.0 / time_step ) );
+	growth_factor   = exp( interest_rate * ( 1.0 / time_step ) );
 	up_move_prob    = ( growth_factor - down_move_ratio ) / ( up_move_ratio - down_move_ratio );
 
-	pricing_func();
-	print_func();
+	if(pricing_model == 0)BM_pricing_func();
+	else BS_pricing_func(option_type, stock_0, volatility, exercise, maturity, interest_rate);
+
+	print_func(print_mode);
 }
 
-void BinoModel::print_func() const
-{
-	cout.precision(4);
-	/*
-	cout<<"Result:"<<endl;
-	cout<<"(1) Basic Parameters"<<endl;
-	if(option_type==0)cout<<"    European Style"<<endl;
-	else cout<<"    American Style"<<endl;
-	cout<<"    u: "<<fixed<<up_move_ratio<<endl;
-	cout<<"    d: "<<fixed<<down_move_ratio<<endl;
-	cout<<"    p: "<<fixed<<up_move_prob<<endl;
-	cout<<"    time step \\Delta t = "<<fixed<<maturity/(double)step_num<<" years"<<endl;
-
-	cout<<"(2) Option Price"<<endl;*/
-	cout<<"    "<<fixed<<option_pricing_value<<endl;
-}
-
-void BinoModel::pricing_func()
+void BinoModel::BM_pricing_func()
 {
 	double parent[step_num+1];
 	double child[step_num+1];
@@ -184,10 +220,17 @@ void BinoModel::pricing_func()
 			underly_asset[i][j] = stock_0*pow(up_move_ratio, j)*pow(down_move_ratio, i-j);
 
 	// Generate option price at time step N
-	for(int i=0; i<(step_num+1); i++)
+	if(option_type == 0)
 	{
-		double exercise_value = exercise - underly_asset[step_num][i];
-		child[i] = max(exercise_value, (double) 0);
+		// Call option pricing
+		for(int i=0; i<(step_num+1); i++)
+			child[i] = max( ( underly_asset[step_num][i] - exercise ), 0.0);
+	}
+	else
+	{
+		// Put option pricing
+		for(int i=0; i<(step_num+1); i++)
+			child[i] = max( ( exercise - underly_asset[step_num][i] ), 0.0);
 	}
 
 	// Backward induction procedure
@@ -195,13 +238,16 @@ void BinoModel::pricing_func()
 	{
 		for(int j=0; j<step_num-i+1; j++)
 		{
-			double risk_neutral_future;
-			double early_exercise;
-			double later_exercise;
+			double risk_neutral_future, early_exercise, later_exercise;
 
 			risk_neutral_future = child[j] * (1-up_move_prob) + child[j+1] * up_move_prob;
-			early_exercise      = ( option_type == 0 ) ? 0 : ( exercise - underly_asset[step_num-i][j] );
+			
 			later_exercise      = risk_neutral_future * exp( -interest_rate * maturity / (double) step_num );
+			
+			if(option_type == 0)
+				early_exercise  = ( option_style == 0 ) ? 0 : ( underly_asset[step_num-i][j] - exercise );
+			else
+				early_exercise  = ( option_style == 0 ) ? 0 : ( exercise - underly_asset[step_num-i][j] );
 
 			parent[j] = max(early_exercise, later_exercise);
 		}
@@ -213,60 +259,79 @@ void BinoModel::pricing_func()
 	option_pricing_value = parent[0];
 }
 
-void BinoModel::change_time_step(int NewTimeStep)
+void BinoModel::BS_pricing_func(
+	int    option_type, 
+	double stock_0, 
+	double volatility, 
+	double exercise, 
+	double maturity, 
+	double interest_rate)
 {
-	if( NewTimeStep != 0 )
-	{
-		if( NewTimeStep > 0 )
-		{
-			if( NewTimeStep != time_step )
-			{
-				time_step = NewTimeStep;
-				step_num  = ceil((double) time_step*maturity);
-				//cout<<time_step<<endl;
-				pricing_func();
-				print_func();
-			}
-		}
-		else cout<<"Wrong value: time step"<<endl;
-	}
+	// Black-Scholes formula can only be used to price European options.
+	if(option_type == 0)
+		option_pricing_value = call_price(stock_0, exercise, interest_rate, volatility, maturity);
+	else
+		option_pricing_value = put_price(stock_0, exercise, interest_rate, volatility, maturity);
 }
 
-double BinoModel::BS_pricing_func()
+double BinoModel::call_price(double S, double K, double r, double v, double T) const
 {
-// This calculates d_j, for j in {1,2}. This term appears in the closed
-// form solution for the European call or put price
-double d_j(const int& j, const double& S, const double& K, const double& r, const double& v, const double& T) {
-    return (log(S/K) + (r + (pow(-1,j-1))*0.5*v*v)*T)/(v*(pow(T,0.5)));
+	return S * norm_cdf(d_j(1, S, K, r, v, T))- K * exp(-r*T) * norm_cdf(d_j(2, S, K, r, v, T));
 }
 
-// Calculate the European vanilla call price based on
-// underlying S, strike K, risk-free rate r, volatility of
-// underlying sigma and time to maturity T
-double call_price(const double& S, const double& K, const double& r, const double& v, const double& T) {
-    return S * norm_cdf(d_j(1, S, K, r, v, T))-K*exp(-r*T) * norm_cdf(d_j(2, S, K, r, v, T));
+double BinoModel::put_price(double S, double K, double r, double v, double T) const
+{
+	return (-S) * norm_cdf(-d_j(1, S, K, r, v, T)) + K * exp(-r*T) * norm_cdf(-d_j(2, S, K, r, v, T));
 }
 
-// Calculate the European vanilla put price based on
-// underlying S, strike K, risk-free rate r, volatility of
-// underlying sigma and time to maturity T
-double put_price(const double& S, const double& K, const double& r, const double& v, const double& T) {
-    return -S*norm_cdf(-d_j(1, S, K, r, v, T))+K*exp(-r*T) * norm_cdf(-d_j(2, S, K, r, v, T));
-}
-}
-
-double BinoModel::norm_pdf(double x)
+double BinoModel::norm_pdf(double x) const
 {
 	// Standard normal probability density function
-    return ( 1.0 / ( pow(2*M_PI, 0.5) ) ) * ( exp(-0.5*x*x));
+	return ( 1.0 / ( pow(2*M_PI, 0.5) ) ) * ( exp(-0.5*x*x));
 }
 
-double BinoModel::norm_cdf(double x)
+double BinoModel::norm_cdf(double x) const
 {
 	// The approximation of the CDF for standard normal distribution, recursion version.
-    double k = 1.0/(1.0 + 0.2316419*x);
-    double k_sum = k*(0.319381530 + k*(-0.356563782 + k*(1.781477937 + k*(-1.821255978 + 1.330274429*k))));
+	double k = 1.0/(1.0 + 0.2316419*x);
+	double k_sum = k*(0.319381530 + k*(-0.356563782 + k*(1.781477937 + k*(-1.821255978 + 1.330274429*k))));
 
-    if ( x >= 0.0 )return ( 1.0 - (1.0/(pow(2*M_PI,0.5)))*exp(-0.5*x*x) * k_sum );
-    else return ( 1.0 - norm_cdf(-x) );
+	if ( x >= 0.0 )return ( 1.0 - (1.0/(pow(2*M_PI,0.5)))*exp(-0.5*x*x) * k_sum );
+	else return ( 1.0 - norm_cdf(-x) );
+}
+
+double BinoModel::d_j(int j, double S, double K, double r, double v, double T) const
+{
+	//Calculate 'd_1' and 'd_2' term in BS formula
+	return ( log(S/K) + T * ( r + pow(-1, j-1) * 0.5 * v*v ) ) / ( v * pow(T, 0.5) );
+}
+
+void BinoModel::print_func(int print_mode) const
+{
+	cout.precision(4);
+
+	if(print_mode == 0)
+	{
+		cout<<"Result:"<<endl;
+		cout<<"(1) Basic Parameters"<<endl;
+		if(option_style == 0)
+		{
+			if(option_type == 0)cout<<"    European Call"<<endl;
+			else cout<<"    European Put"<<endl;
+		}
+		else
+		{
+			if(option_type == 0)cout<<"    American Call"<<endl;
+			else cout<<"    American Put"<<endl;
+		}
+		cout<<"    u: "<<fixed<<up_move_ratio<<endl;
+		cout<<"    d: "<<fixed<<down_move_ratio<<endl;
+		cout<<"    p: "<<fixed<<up_move_prob<<endl;
+		cout<<"    time step \\Delta t = "<<fixed<<maturity/(double)step_num<<" years"<<endl;
+
+		cout<<"(2) Option Price"<<endl;
+		cout<<"    "<<fixed<<option_pricing_value<<endl;
+	}
+
+	else cout<<fixed<<option_pricing_value<<endl;
 }

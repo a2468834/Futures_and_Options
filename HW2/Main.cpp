@@ -12,8 +12,15 @@ using namespace std;
 
 int main()
 {
-	BinoModel B(0, 1, 50, 0.3, 52, 2, 0.05);
-	for(int i=2; i<252+1; i++)B.change_time_step(i);
+	vector<BinoModel> BM;
+
+	// Using binomial tree model
+	cout<<"Binomial Model:"<<endl;
+	for(double i=0.5; i<252.5; i=i+0.5)BM.emplace_back(0, 1, i, 50, 0.3, 52, 2, 0.05, 1, 0);
+	
+	// Using Black-Scholes model
+	cout<<"Black-Scholes Model:"<<endl;
+	BM.emplace_back(0, 1, 252, 50, 0.3, 52, 2, 0.05, 1, 1);
 
 	return 0; 
 }
