@@ -2,6 +2,7 @@ README
 ===
 
 **Course:** Futures and Options
+
 **Title:** Homework #2 Binomial Tree
 
 ## Hardware Information
