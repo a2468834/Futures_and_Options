@@ -12,7 +12,8 @@ using namespace std;
 
 int main()
 {
-	BinoModel B1;
-	BinoModel B2(0, 52, 10, 0.1, 20, 2, 0.001);
-	return 0;
+	BinoModel B(0, 1, 50, 0.3, 52, 2, 0.05);
+	for(int i=2; i<252+1; i++)B.change_time_step(i);
+
+	return 0; 
 }
