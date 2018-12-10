@@ -328,6 +328,8 @@ void BinoModel::print_func(int print_mode) const
 		cout<<"    d: "<<fixed<<down_move_ratio<<endl;
 		cout<<"    p: "<<fixed<<up_move_prob<<endl;
 		cout<<"    time step \\Delta t = "<<fixed<<maturity/(double)step_num<<" years"<<endl;
+		if(pricing_model == 0)cout<<"    Use binomial tree model."<<endl;
+		else cout<<"    Use Black-Scholes model."<<endl;
 
 		cout<<"(2) Option Price"<<endl;
 		cout<<"    "<<fixed<<option_pricing_value<<endl;
